@@ -29,7 +29,10 @@
       "Bash(git config:*)",
       "Bash(git remote add:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(\"venv\\\\Scripts\\\\pip.exe\" show docx2pdf)",
+      "Bash(\"venv\\\\Scripts\\\\pip.exe\":*)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -p)"
     ]
   }
 }

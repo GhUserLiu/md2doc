@@ -15,6 +15,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from md2doc import MarkdownConverter, ConverterConfig
+from docx2pdf import convert
 
 
 def setup_logging(log_file=None, verbose=False):
@@ -37,8 +38,16 @@ def setup_logging(log_file=None, verbose=False):
     return logging.getLogger(__name__)
 
 
-def convert_single_file(md_file: Path, output_dir: Path, converter, logger) -> bool:
-    """转换单个文件"""
+def convert_single_file(md_file: Path, output_dir: Path, converter, logger, export_pdf=False) -> bool:
+    """转换单个文件
+
+    Args:
+        md_file: Markdown文件路径
+        output_dir: 输出目录
+        converter: 转换器实例
+        logger: 日志记录器
+        export_pdf: 是否同时导出PDF
+    """
     try:
         doc, title = converter.convert(md_file)
         if doc is None:
@@ -48,9 +57,19 @@ def convert_single_file(md_file: Path, output_dir: Path, converter, logger) -> b
         output_filename = f"{title}.docx"
         output_path = output_dir / output_filename
 
-        # 保存文档
+        # 保存Word文档
         doc.save(output_path)
-        logger.info(f"✓ 成功: {output_filename}")
+        logger.info(f"✓ Word: {output_filename}")
+
+        # 如果需要导出PDF
+        if export_pdf:
+            try:
+                pdf_path = output_dir / f"{title}.pdf"
+                convert(str(output_path), str(pdf_path))
+                logger.info(f"✓ PDF:  {title}.pdf")
+            except Exception as pdf_error:
+                logger.warning(f"  PDF转换失败: {pdf_error}")
+
         return True
 
     except Exception as e:
@@ -79,6 +98,9 @@ def main():
   # 转换单个文件
   python -m md2doc.cli -f document.md
 
+  # 同时导出PDF
+  python -m md2doc.cli -p
+
   # 显示详细信息
   python -m md2doc.cli -v
         """
@@ -94,6 +116,8 @@ def main():
                        help='日志文件路径')
     parser.add_argument('-v', '--verbose', action='store_true',
                        help='显示详细日志')
+    parser.add_argument('-p', '--pdf', action='store_true',
+                       help='同时导出PDF文件')
 
     args = parser.parse_args()
 
@@ -122,7 +146,7 @@ def main():
             output_dir.mkdir(parents=True, exist_ok=True)
 
             logger.info(f"输出目录: {output_dir.absolute()}")
-            success = convert_single_file(md_file, output_dir, converter, logger)
+            success = convert_single_file(md_file, output_dir, converter, logger, args.pdf)
 
             if success:
                 print()
@@ -162,7 +186,7 @@ def main():
             }
 
             for md_file in md_files:
-                if convert_single_file(md_file, output_dir, converter, logger):
+                if convert_single_file(md_file, output_dir, converter, logger, args.pdf):
                     results['success'] += 1
                 else:
                     results['failed'] += 1
