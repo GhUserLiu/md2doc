@@ -159,9 +159,46 @@ def main():
             input_dir = Path(args.input)
             output_dir = Path(args.output)
 
+            # 如果input目录不存在，自动创建并提示
             if not input_dir.exists():
-                logger.error(f"输入目录不存在: {input_dir}")
-                sys.exit(1)
+                print('=' * 60)
+                print('提示: input 文件夹不存在')
+                print('=' * 60)
+                print()
+                print(f'已自动创建 input 文件夹: {input_dir.absolute()}')
+                print()
+                print('请将需要转换的 Markdown 文件 (.md) 放入该文件夹，然后重新运行程序')
+                print()
+                input_dir.mkdir(parents=True, exist_ok=True)
+
+                # 创建示例文件
+                sample_file = input_dir / '示例.md'
+                if not sample_file.exists():
+                    sample_content = """# 示例文档
+
+这是一个示例Markdown文档。
+
+## 一级标题
+
+这是正文内容。支持以下特性：
+
+- **粗体文本** - 会被自动移除格式标记
+- *斜体文本* - 会被自动移除格式标记
+- `代码片段` - 会被自动移除格式标记
+
+## 二级标题
+
+支持列表、表格等标准Markdown语法。
+
+### 三级标题
+
+完整的格式规范请参考项目文档。
+"""
+                    sample_file.write_text(sample_content, encoding='utf-8')
+                    print(f'已创建示例文件: {sample_file.name}')
+                print()
+
+                sys.exit(0)
 
             # 创建输出目录
             output_dir.mkdir(parents=True, exist_ok=True)

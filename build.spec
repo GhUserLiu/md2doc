@@ -2,6 +2,11 @@
 """
 PyInstaller配置文件 - md2doc打包
 使用方法: pyinstaller build.spec
+
+打包后说明:
+1. 可执行文件会自动创建 input/ 和 output/ 文件夹
+2. 首次运行会提示用户将MD文件放入input文件夹
+3. 双击运行即可批量转换所有MD文件
 """
 
 block_cipher = None
@@ -11,8 +16,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        # 包含配置文件（如果需要）
-        # ('src/md2doc/*.py', 'md2doc'),
+        # 包含源代码模块
+        ('src/md2doc/*.py', 'md2doc'),
     ],
     hiddenimports=[
         # 明确指定隐藏导入
@@ -37,6 +42,8 @@ a = Analysis(
         'pandas',
         'numpy',
         'scipy',
+        'IPython',
+        'pygments',
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
@@ -68,3 +75,4 @@ exe = EXE(
     entitlements_file=None,
     icon=None,  # 可以添加自定义图标路径
 )
+

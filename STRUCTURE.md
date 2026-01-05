@@ -47,7 +47,6 @@ md2doc/                          # 项目根目录
 ├── 运行.bat                       # Word导出脚本
 ├── 运行PDF.bat                    # Word+PDF导出脚本
 ├── 运行测试.bat                   # 测试脚本
-├── 打包.bat                       # 打包脚本
 │
 ├── md2doc.py                     # 主程序入口
 ├── build.spec                    # PyInstaller打包配置
