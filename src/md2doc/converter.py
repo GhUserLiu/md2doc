@@ -151,6 +151,8 @@ def parse_inline_formatting(text: str) -> str:
     - 移除 `code` → code (不应用代码格式)
     - 保留 \* → *
     - 保留其他转义字符
+    - 移除段首空格（包括全角和半角空格）
+    - 压缩题序和标题之间的多余空格
 
     Args:
         text: 原始文本
@@ -212,6 +214,14 @@ def parse_inline_formatting(text: str) -> str:
                 result = result[:i] + result[i+1:]
                 continue
         i += 1
+
+    # 移除段首的所有空格（包括全角空格和半角空格）
+    result = re.sub(r'^[\s\u3000]+', '', result)
+
+    # 压缩题序和标题之间的多余空格
+    # 匹配模式：一、二、三、 或 （一）、（二） 或 1.、2. 或 （1）、（2）等题序
+    # 将题序后的多个空格移除（包括全角和半角空格）
+    result = re.sub(r'([一二三四五六七八九十]+、|（[一二三四五六七八九十]+）|\d+[\.\)、\uff09])([\s\u3000]+)', r'\1', result)
 
     return result
 
@@ -347,11 +357,13 @@ class MarkdownConverter:
 
             # 处理各种Markdown元素
             if line.startswith('# ') and not line.startswith('## '):
-                self._process_heading1(doc, line)
+                self._process_document_title(doc, line)  # 文档主标题 (#)
             elif line.startswith('## ') and not line.startswith('### '):
-                self._process_heading2(doc, line)
-            elif line.startswith('### '):
-                self._process_heading3(doc, line)
+                self._process_heading1(doc, line)  # 一级标题 (##)
+            elif line.startswith('### ') and not line.startswith('#### '):
+                self._process_heading2(doc, line)  # 二级标题 (###)
+            elif line.startswith('#### '):
+                self._process_heading3(doc, line)  # 三级标题 (####)
             elif line.strip().startswith('>'):
                 self._process_quote(doc, line)
             elif line.strip().startswith('---') or line.strip().startswith('***'):
@@ -411,13 +423,37 @@ class MarkdownConverter:
                     set_paragraph_spacing(para, line_spacing=self.config.PARAGRAPH.line_spacing)
                     para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
+    def _process_document_title(self, doc: Document, line: str):
+        """处理文档主标题 (#)"""
+        title_text = line[1:].strip()  # 移除一个 # 字符
+        # 清理Markdown格式标记
+        title_text = parse_inline_formatting(title_text)
+
+        # 使用普通段落而不是heading，避免自动添加下划线
+        p = doc.add_paragraph(title_text)
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+        font_config = self.config.get_font('title')
+        for run in p.runs:
+            set_font(run, font_config.name, font_config.size, font_config.bold)
+
+        set_paragraph_spacing(
+            p,
+            space_before=self.config.PARAGRAPH.space_before_title,
+            space_after=self.config.PARAGRAPH.space_after_title,
+            line_spacing=self.config.PARAGRAPH.line_spacing
+        )
+
+        # 移除标题边框和小黑点
+        remove_paragraph_border(p)
+
     def _process_heading1(self, doc: Document, line: str):
-        """处理一级标题"""
-        heading_text = line[2:].strip()
+        """处理一级标题 (##)"""
+        heading_text = line[2:].strip()  # 移除 ## 字符
         # 清理Markdown格式标记
         heading_text = parse_inline_formatting(heading_text)
         heading = doc.add_heading(heading_text, level=1)
-        heading.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        heading.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT  # 一级标题左对齐
 
         font_config = self.config.get_font('heading1')
         for run in heading.runs:
@@ -434,8 +470,8 @@ class MarkdownConverter:
         remove_paragraph_border(heading)
 
     def _process_heading2(self, doc: Document, line: str):
-        """处理二级标题"""
-        heading_text = line[3:].strip()
+        """处理二级标题 (###)"""
+        heading_text = line[3:].strip()  # 移除 ### 字符
         # 清理Markdown格式标记
         heading_text = parse_inline_formatting(heading_text)
         heading = doc.add_heading(heading_text, level=2)
@@ -456,8 +492,8 @@ class MarkdownConverter:
         remove_paragraph_border(heading)
 
     def _process_heading3(self, doc: Document, line: str):
-        """处理三级标题"""
-        heading_text = line[4:].strip()
+        """处理三级标题 (####)"""
+        heading_text = line[4:].strip()  # 移除 #### 字符
         # 清理Markdown格式标记
         heading_text = parse_inline_formatting(heading_text)
         heading = doc.add_heading(heading_text, level=3)
