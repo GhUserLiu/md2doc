@@ -9,19 +9,35 @@
 - 🎯 精确的格式控制（字体、行距、缩进等）
 - 📄 支持 Word 和 PDF 双格式导出
 - 🧹 自动清理 Markdown 格式标记（粗体、斜体、代码）
-- 🚀 简单易用，双击运行
+- 🚀 **独立可执行文件，无需安装Python**
 - 🧪 模块化设计，可作为 Python 库使用
 
 ## 🚀 快速开始
 
-### Windows 用户（推荐）
+### 方式一：使用可执行文件（推荐，无需Python）
 
-**双击运行以下批处理文件：**
+1. 从 [Releases](https://github.com/GhUserLiu/md2doc/releases) 下载 `md2doc.exe`
+2. 双击运行（自动创建 `input/` 和 `output/` 文件夹）
+3. 将 Markdown 文件放入 `input/` 文件夹
+4. 再次双击运行即可批量转换
+
+**命令行参数**：
+
+```bash
+md2doc.exe          # 批量转换 input 文件夹
+md2doc.exe -p       # 同时导出 PDF
+md2doc.exe -f 文件.md  # 转换单个文件
+```
+
+### 方式二：使用 Python 源码（开发者）
+
+**Windows 快捷脚本**：
 
 - `运行.bat` - 仅导出 Word 文档
 - `运行PDF.bat` - 同时导出 Word 和 PDF 文档
+- `运行测试.bat` - 运行单元测试
 
-### 命令行使用
+**命令行使用**：
 
 ```bash
 # 激活虚拟环境
@@ -133,12 +149,9 @@ python tests/test_converter.py
 
 所有 Markdown 格式标记（`**`、`*`、`` ` ``）都会被移除，生成纯文本 Word 文档，符合中文公文规范。
 
-## 📦 可执行文件
+## 💻 开发者
 
-### 获取方式
-
-1. **直接下载**：从 [Releases](https://github.com/GhUserLiu/md2doc/releases) 下载可执行文件
-2. **自行打包**：
+### 打包可执行文件
 
 ```bash
 # 安装打包依赖
@@ -148,21 +161,6 @@ pip install -r requirements-build.txt
 pyinstaller build.spec
 
 # 可执行文件位于: dist/md2doc.exe
-```
-
-### 使用可执行文件
-
-1. 将 `md2doc.exe` 放到任意文件夹
-2. 双击运行（自动创建 `input/` 和 `output/` 文件夹）
-3. 将 Markdown 文件放入 `input/` 文件夹
-4. 再次双击运行即可批量转换
-
-**命令行参数**：
-
-```bash
-md2doc.exe          # 批量转换 input 文件夹
-md2doc.exe -p       # 同时导出 PDF
-md2doc.exe -f 文件.md  # 转换单个文件
 ```
 
 ## 📄 许可证

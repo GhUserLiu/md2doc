@@ -44,9 +44,9 @@ md2doc/                          # 项目根目录
 │
 ├── venv/                         # 虚拟环境（已在.gitignore中）
 │
-├── 运行.bat                       # Word导出脚本
-├── 运行PDF.bat                    # Word+PDF导出脚本
-├── 运行测试.bat                   # 测试脚本
+├── 运行.bat                       # 开发者快捷脚本（Word导出）
+├── 运行PDF.bat                    # 开发者快捷脚本（Word+PDF导出）
+├── 运行测试.bat                   # 开发者快捷脚本（运行测试）
 │
 ├── md2doc.py                     # 主程序入口
 ├── build.spec                    # PyInstaller打包配置
@@ -56,6 +56,11 @@ md2doc/                          # 项目根目录
 ├── requirements-build.txt        # 打包依赖
 └── .gitignore                    # Git忽略文件
 ```
+
+**注意**：项目提供两种使用方式
+
+1. **普通用户**：使用 `dist/md2doc.exe` 可执行文件（推荐）
+2. **开发者**：使用 Python 源码 + bat脚本
 
 ## 📦 核心模块说明
 
