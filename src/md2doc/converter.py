@@ -34,6 +34,11 @@ def set_font(run, font_name: str, size: Pt = None, bold: bool = None):
     color_element.set(qn('w:val'), '000000')
     rPr.append(color_element)
 
+    # 禁用下划线
+    underline = OxmlElement('w:u')
+    underline.set(qn('w:val'), 'none')
+    rPr.append(underline)
+
     # 设置字体
     rFonts = OxmlElement('w:rFonts')
     rFonts.set(qn('w:eastAsia'), font_name)
@@ -133,47 +138,60 @@ def is_signature_line(text: str) -> bool:
 
 # ==================== 解析工具函数 ====================
 
-def parse_inline_formatting(text: str) -> List[Tuple[str, str]]:
-    """解析行内格式（加粗、斜体）"""
-    parts = []
-    current = ''
+def parse_inline_formatting(text: str) -> str:
+    """清理行内格式标记,移除所有Markdown格式符号
+
+    处理内容:
+    - 移除粗体标记 **text**
+    - 移除斜体标记 *text*
+    - 移除反引号 `code`
+
+    Args:
+        text: 原始文本
+
+    Returns:
+        str: 清理后的纯文本
+    """
+    result = text
     i = 0
 
-    while i < len(text):
-        if text[i:i+2] == '**':
-            if current:
-                parts.append(('text', current))
-                current = ''
-            j = text.find('**', i + 2)
+    while i < len(result):
+        # 处理粗体 **text**
+        if result[i:i+2] == '**':
+            j = result.find('**', i + 2)
             if j != -1:
-                parts.append(('bold', text[i+2:j]))
-                i = j + 2
+                # 移除 ** 和 **,保留中间内容
+                result = result[:i] + result[i+2:j] + result[j+2:]
                 continue
             else:
-                current += '**'
-                i += 2
+                # 没有结束标记,移除开始的 **
+                result = result[:i] + result[i+2:]
                 continue
-        elif text[i] == '*':
-            if current:
-                parts.append(('text', current))
-                current = ''
-            j = text.find('*', i + 1)
+        # 处理斜体 *text*
+        elif result[i] == '*':
+            j = result.find('*', i + 1)
             if j != -1:
-                parts.append(('italic', text[i+1:j]))
-                i = j + 1
+                # 移除 * 和 *,保留中间内容
+                result = result[:i] + result[i+1:j] + result[j+1:]
                 continue
             else:
-                current += '*'
-                i += 1
+                # 没有结束标记,移除开始的 *
+                result = result[:i] + result[i+1:]
                 continue
-
-        current += text[i]
+        # 处理反引号 `code`
+        elif result[i] == '`':
+            j = result.find('`', i + 1)
+            if j != -1:
+                # 移除 ` 和 `,保留中间内容
+                result = result[:i] + result[i+1:j] + result[j+1:]
+                continue
+            else:
+                # 没有结束标记,移除开始的 `
+                result = result[:i] + result[i+1:]
+                continue
         i += 1
 
-    if current:
-        parts.append(('text', current))
-
-    return parts
+    return result
 
 
 def extract_title_from_md(md_file_path: str) -> str:
@@ -363,16 +381,10 @@ class MarkdownConverter:
                     para = cell.paragraphs[0]
                     para.clear()
 
-                    # 处理行内格式并填充
-                    parts = parse_inline_formatting(cell_text)
-                    for part_type, part_text in parts:
-                        run = para.add_run(part_text)
-                        if part_type == 'bold':
-                            set_run_format(run, font_config, bold=True)
-                        elif part_type == 'italic':
-                            set_run_format(run, font_config, italic=True)
-                        else:
-                            set_run_format(run, font_config)
+                    # 清理Markdown格式标记
+                    cell_text = parse_inline_formatting(cell_text)
+                    run = para.add_run(cell_text)
+                    set_run_format(run, font_config)
 
                     set_paragraph_spacing(para, line_spacing=self.config.PARAGRAPH.line_spacing)
                     para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
@@ -440,6 +452,8 @@ class MarkdownConverter:
     def _process_quote(self, doc: Document, line: str):
         """处理引用块"""
         quote_text = line.strip()[1:].strip()
+        # 清理Markdown格式标记
+        quote_text = parse_inline_formatting(quote_text)
         p = doc.add_paragraph(quote_text)
 
         set_paragraph_spacing(p, line_spacing=self.config.PARAGRAPH.line_spacing)
@@ -448,7 +462,7 @@ class MarkdownConverter:
 
         font_config = self.config.get_font('quote')
         for run in p.runs:
-            set_run_format(run, font_config, bold=font_config.bold, italic=font_config.italic)
+            set_run_format(run, font_config)
 
     def _process_separator(self, doc: Document):
         """处理分隔线"""
@@ -463,28 +477,25 @@ class MarkdownConverter:
     def _process_list_item(self, doc: Document, line: str):
         """处理列表项"""
         list_content = normalize_list_symbol(line.strip())
-        p = doc.add_paragraph()
+        # 清理Markdown格式标记
+        list_content = parse_inline_formatting(list_content)
+        p = doc.add_paragraph(list_content)
 
         set_paragraph_spacing(p, line_spacing=self.config.PARAGRAPH.line_spacing)
         set_first_line_indent_chars(p, self.config.PARAGRAPH.first_line_indent_chars)
         p.alignment = WD_PARAGRAPH_ALIGNMENT.JUSTIFY
 
-        # 处理行内格式
+        # 统一设置字体格式
         font_config = self.config.get_font('body')
-        parts = parse_inline_formatting(list_content)
-        for part_type, part_text in parts:
-            run = p.add_run(part_text)
-            if part_type == 'bold':
-                set_run_format(run, font_config, bold=True)
-            elif part_type == 'italic':
-                set_run_format(run, font_config, italic=True)
-            else:
-                set_run_format(run, font_config)
+        for run in p.runs:
+            set_run_format(run, font_config)
 
     def _process_paragraph(self, doc: Document, line: str):
         """处理普通段落"""
         # 去除首尾空格
         line = line.strip()
+        # 清理Markdown格式标记
+        line = parse_inline_formatting(line)
 
         p = doc.add_paragraph(line)
         set_paragraph_spacing(p, line_spacing=self.config.PARAGRAPH.line_spacing)
@@ -501,19 +512,7 @@ class MarkdownConverter:
             set_first_line_indent_chars(p, self.config.PARAGRAPH.first_line_indent_chars)
             p.alignment = WD_PARAGRAPH_ALIGNMENT.JUSTIFY
 
-        # 处理行内格式
+        # 统一设置字体格式
         font_config = self.config.get_font('body')
-        parts = parse_inline_formatting(line)
-        if len(parts) > 1 or parts[0][0] != 'text':
-            p.clear()
-            for part_type, part_text in parts:
-                run = p.add_run(part_text)
-                if part_type == 'bold':
-                    set_run_format(run, font_config, bold=True)
-                elif part_type == 'italic':
-                    set_run_format(run, font_config, italic=True)
-                else:
-                    set_run_format(run, font_config)
-        else:
-            for run in p.runs:
-                set_run_format(run, font_config)
+        for run in p.runs:
+            set_run_format(run, font_config)

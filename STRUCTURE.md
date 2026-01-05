@@ -7,7 +7,7 @@ md2doc/                          # 项目根目录
 ├── src/                          # 源代码目录
 │   └── md2doc/                   # 核心包
 │       ├── __init__.py           # 包初始化
-│       ├── cli.py                # 命令行工具
+│       ├── cli.py                # 命令行工具（支持PDF导出）
 │       ├── config.py             # 配置管理
 │       └── converter.py          # 转换器核心（含格式化和解析）
 │
@@ -39,11 +39,12 @@ md2doc/                          # 项目根目录
 │   └── 示例.md
 │
 ├── output/                       # 输出文件夹
-│   └── (生成的Word文档)
+│   └── (生成的Word和PDF文档)
 │
 ├── venv/                         # 虚拟环境（已在.gitignore中）
 │
-├── 运行.bat                       # Windows便捷脚本
+├── 运行.bat                       # Word导出脚本
+├── 运行PDF.bat                    # Word+PDF导出脚本
 ├── 运行测试.bat                   # 测试脚本
 │
 ├── md2doc.py                     # 主程序入口
@@ -71,6 +72,7 @@ md2doc/                          # 项目根目录
 提供命令行接口：
 - 批量转换
 - 单文件转换
+- PDF 导出（使用 `-p` 参数）
 - 日志记录
 - 参数处理
 
@@ -79,11 +81,13 @@ md2doc/                          # 项目根目录
 ### Windows用户
 ```bash
 # 方式1：双击运行（最简单）
-运行.bat
+运行.bat              # 仅导出Word
+运行PDF.bat           # 导出Word和PDF
 
 # 方式2：命令行
 venv\Scripts\activate
-python md2doc.py
+python md2doc.py      # 仅导出Word
+python md2doc.py -p   # 导出Word和PDF
 ```
 
 ### Linux/Mac用户
@@ -134,7 +138,10 @@ python tests/test_converter.py
 | **正文字体** | 仿宋_GB2312 |
 | **正文字号** | 3号 (16pt) |
 | **首行缩进** | 2字符 (0.3英寸) |
+| **段前/段后间距** | 0pt |
 | **页边距** | 上3.7cm, 下3.5cm, 左2.8cm, 右2.6cm |
+| **格式处理** | 自动移除 `**`、`*`、`` ` `` 标记 |
+| **全局样式** | 禁用下划线、禁用彩色字体 |
 
 ### 修改配置
 
@@ -147,13 +154,18 @@ python tests/test_converter.py
 3. **便捷脚本** - Windows一键运行
 4. **完整文档** - 详细的使用说明和参考文档
 5. **单元测试** - 确保代码质量
+6. **格式清理** - 自动移除Markdown格式标记
+7. **双格式导出** - 支持Word和PDF导出
 
 ## 📦 依赖关系
 
 ```
-python-docx (1.2.0)
-    └── lxml (6.0.2)
+python-docx (>=0.8.11)  # Word文档操作
+    └── lxml (>=6.0.2)
         └── typing_extensions
+
+docx2pdf (>=0.1.8)      # PDF导出功能
+    └── win32com (Windows)
 ```
 
 ## 🔧 开发说明

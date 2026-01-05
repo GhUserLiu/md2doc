@@ -33,7 +33,10 @@
       "Bash(\"venv\\\\Scripts\\\\pip.exe\" show docx2pdf)",
       "Bash(\"venv\\\\Scripts\\\\pip.exe\":*)",
       "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -p)",
-      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -f \"input\\\\测试空格.md\")"
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -f \"input\\\\测试空格.md\")",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, ''src''\\); from md2doc.converter import parse_inline_formatting; text = ''\\\\`\\\\`* 项目内容\\\\`\\\\`''; print\\(''输入:'', repr\\(text\\)\\); print\\(''输出:'', parse_inline_formatting\\(text\\)\\)\")",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" test_inline.py)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -f \"input\\\\测试文档.md\" -p)"
     ]
   }
 }
