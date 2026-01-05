@@ -47,3 +47,10 @@ desktop.ini
 *.tmp
 *.bak
 *.backup
+
+# PyInstaller打包
+# *.spec  # 取消注释以忽略所有spec文件，我们保留build.spec
+*.exe
+*.manifest
+build/
+dist/

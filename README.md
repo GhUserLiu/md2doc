@@ -133,6 +133,32 @@ python tests/test_converter.py
 
 所有 Markdown 格式标记（`**`、`*`、`` ` ``）都会被移除，生成纯文本 Word 文档，符合中文公文规范。
 
+## 📦 可执行文件
+
+### 获取可执行文件
+
+你可以：
+
+1. **直接使用**：下载 Releases 中的可执行文件（无需安装Python）
+2. **自行打包**：按照下方打包指南自行打包
+
+### 打包为可执行文件
+
+```bash
+# 安装打包依赖
+pip install -r requirements-build.txt
+
+# 运行打包脚本（推荐）
+打包.bat
+
+# 或手动打包
+pyinstaller build.spec
+```
+
+详细打包说明请查看：[打包指南](docs/guide/打包指南.md)
+
+打包后的可执行文件位于 `dist/md2doc.exe`，可直接分发使用。
+
 ## 📄 许可证
 
 MIT License

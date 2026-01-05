@@ -20,7 +20,8 @@ md2doc/                          # 项目根目录
 │   │   ├── 虚拟环境使用指南.md
 │   │   ├── 环境配置.md
 │   │   ├── pip安装说明.md
-│   │   └── pip安装位置总结.md
+│   │   ├── pip安装位置总结.md
+│   │   └── 打包指南.md
 │   ├── reference/                # 参考文档
 │   │   ├── 完整格式规范.md
 │   │   ├── 新版格式规范说明.md
@@ -46,11 +47,14 @@ md2doc/                          # 项目根目录
 ├── 运行.bat                       # Word导出脚本
 ├── 运行PDF.bat                    # Word+PDF导出脚本
 ├── 运行测试.bat                   # 测试脚本
+├── 打包.bat                       # 打包脚本
 │
 ├── md2doc.py                     # 主程序入口
+├── build.spec                    # PyInstaller打包配置
 │
 ├── README.md                     # 项目说明
-├── requirements.txt              # 依赖列表
+├── requirements.txt              # 运行依赖
+├── requirements-build.txt        # 打包依赖
 └── .gitignore                    # Git忽略文件
 ```
 
