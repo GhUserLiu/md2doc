@@ -483,6 +483,9 @@ class MarkdownConverter:
 
     def _process_paragraph(self, doc: Document, line: str):
         """处理普通段落"""
+        # 去除首尾空格
+        line = line.strip()
+
         p = doc.add_paragraph(line)
         set_paragraph_spacing(p, line_spacing=self.config.PARAGRAPH.line_spacing)
 

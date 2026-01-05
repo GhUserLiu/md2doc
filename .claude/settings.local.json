@@ -32,7 +32,8 @@
       "Bash(git push:*)",
       "Bash(\"venv\\\\Scripts\\\\pip.exe\" show docx2pdf)",
       "Bash(\"venv\\\\Scripts\\\\pip.exe\":*)",
-      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -p)"
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -p)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -f \"input\\\\测试空格.md\")"
     ]
   }
 }
