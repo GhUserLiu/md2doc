@@ -54,17 +54,21 @@ def set_font(run, font_name: str, size: Pt = None, bold: bool = None):
 
 
 def set_paragraph_spacing(paragraph, space_before=None, space_after=None, line_spacing=None):
-    """设置段落格式"""
+    """设置段落格式
+
+    注意：space_before和space_after即使是0也需要设置，以覆盖Word默认间距
+    """
     pPr = paragraph._element.get_or_add_pPr()
 
-    if space_before or space_after or line_spacing:
+    # 创建spacing元素（只要任一参数不为None就创建）
+    if space_before is not None or space_after is not None or line_spacing is not None:
         spacing = OxmlElement('w:spacing')
 
-        if space_before:
+        if space_before is not None:
             spacing.set(qn('w:before'), str(int(space_before)))
-        if space_after:
+        if space_after is not None:
             spacing.set(qn('w:after'), str(int(space_after)))
-        if line_spacing:
+        if line_spacing is not None:
             if isinstance(line_spacing, Pt):
                 # 固定值：Pt转缇，1pt = 20缇
                 spacing.set(qn('w:line'), str(int(line_spacing.pt * 20)))
@@ -139,54 +143,72 @@ def is_signature_line(text: str) -> bool:
 # ==================== 解析工具函数 ====================
 
 def parse_inline_formatting(text: str) -> str:
-    """清理行内格式标记,移除所有Markdown格式符号
+    r"""清理Markdown格式标记，但保留转义字符
 
-    处理内容:
-    - 移除粗体标记 **text**
-    - 移除斜体标记 *text*
-    - 移除反引号 `code`
+    处理规则:
+    - 移除 **text** → text (不应用加粗格式)
+    - 移除 *text* → text (不应用斜体格式)
+    - 移除 `code` → code (不应用代码格式)
+    - 保留 \* → *
+    - 保留其他转义字符
 
     Args:
         text: 原始文本
 
     Returns:
-        str: 清理后的纯文本
+        str: 清理格式标记后的文本
     """
     result = text
-    i = 0
 
+    # 处理转义字符（先处理，避免被后续规则影响）
+    # \* → *
+    result = result.replace('\\*', '*')
+    # \` → `
+    result = result.replace('\\`', '`')
+    # \_ → _
+    result = result.replace('\\_', '_')
+
+    # 处理粗体 **text**
+    i = 0
     while i < len(result):
-        # 处理粗体 **text**
         if result[i:i+2] == '**':
             j = result.find('**', i + 2)
             if j != -1:
-                # 移除 ** 和 **,保留中间内容
+                # 移除 ** 和 **，保留中间内容
                 result = result[:i] + result[i+2:j] + result[j+2:]
                 continue
             else:
-                # 没有结束标记,移除开始的 **
+                # 没有结束标记，移除开始的 **
                 result = result[:i] + result[i+2:]
                 continue
-        # 处理斜体 *text*
-        elif result[i] == '*':
+        i += 1
+
+    # 处理斜体 *text* (不处理已经处理过的 ** 部分)
+    i = 0
+    while i < len(result):
+        if result[i] == '*' and (i == 0 or result[i-1] != '*') and (i+1 >= len(result) or result[i+1] != '*'):
             j = result.find('*', i + 1)
-            if j != -1:
-                # 移除 * 和 *,保留中间内容
+            if j != -1 and (j+1 >= len(result) or result[j+1] != '*'):
+                # 移除 * 和 *，保留中间内容
                 result = result[:i] + result[i+1:j] + result[j+1:]
                 continue
             else:
-                # 没有结束标记,移除开始的 *
+                # 没有结束标记，移除开始的 *
                 result = result[:i] + result[i+1:]
                 continue
-        # 处理反引号 `code`
-        elif result[i] == '`':
+        i += 1
+
+    # 处理反引号 `code`
+    i = 0
+    while i < len(result):
+        if result[i] == '`':
             j = result.find('`', i + 1)
             if j != -1:
-                # 移除 ` 和 `,保留中间内容
+                # 移除 ` 和 `，保留中间内容
                 result = result[:i] + result[i+1:j] + result[j+1:]
                 continue
             else:
-                # 没有结束标记,移除开始的 `
+                # 没有结束标记，移除开始的 `
                 result = result[:i] + result[i+1:]
                 continue
         i += 1
@@ -392,6 +414,8 @@ class MarkdownConverter:
     def _process_heading1(self, doc: Document, line: str):
         """处理一级标题"""
         heading_text = line[2:].strip()
+        # 清理Markdown格式标记
+        heading_text = parse_inline_formatting(heading_text)
         heading = doc.add_heading(heading_text, level=1)
         heading.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
@@ -412,6 +436,8 @@ class MarkdownConverter:
     def _process_heading2(self, doc: Document, line: str):
         """处理二级标题"""
         heading_text = line[3:].strip()
+        # 清理Markdown格式标记
+        heading_text = parse_inline_formatting(heading_text)
         heading = doc.add_heading(heading_text, level=2)
         heading.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
@@ -432,6 +458,8 @@ class MarkdownConverter:
     def _process_heading3(self, doc: Document, line: str):
         """处理三级标题"""
         heading_text = line[4:].strip()
+        # 清理Markdown格式标记
+        heading_text = parse_inline_formatting(heading_text)
         heading = doc.add_heading(heading_text, level=3)
         heading.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
@@ -456,7 +484,13 @@ class MarkdownConverter:
         quote_text = parse_inline_formatting(quote_text)
         p = doc.add_paragraph(quote_text)
 
-        set_paragraph_spacing(p, line_spacing=self.config.PARAGRAPH.line_spacing)
+        # 设置段间距（包括段前段后0pt）
+        set_paragraph_spacing(
+            p,
+            space_before=self.config.PARAGRAPH.space_before_title,
+            space_after=self.config.PARAGRAPH.space_after_title,
+            line_spacing=self.config.PARAGRAPH.line_spacing
+        )
         set_first_line_indent_chars(p, self.config.PARAGRAPH.first_line_indent_chars)
         p.alignment = WD_PARAGRAPH_ALIGNMENT.JUSTIFY
 
@@ -481,7 +515,13 @@ class MarkdownConverter:
         list_content = parse_inline_formatting(list_content)
         p = doc.add_paragraph(list_content)
 
-        set_paragraph_spacing(p, line_spacing=self.config.PARAGRAPH.line_spacing)
+        # 设置段间距（包括段前段后0pt）
+        set_paragraph_spacing(
+            p,
+            space_before=self.config.PARAGRAPH.space_before_title,
+            space_after=self.config.PARAGRAPH.space_after_title,
+            line_spacing=self.config.PARAGRAPH.line_spacing
+        )
         set_first_line_indent_chars(p, self.config.PARAGRAPH.first_line_indent_chars)
         p.alignment = WD_PARAGRAPH_ALIGNMENT.JUSTIFY
 
@@ -498,7 +538,14 @@ class MarkdownConverter:
         line = parse_inline_formatting(line)
 
         p = doc.add_paragraph(line)
-        set_paragraph_spacing(p, line_spacing=self.config.PARAGRAPH.line_spacing)
+
+        # 设置段间距（包括段前段后0pt）
+        set_paragraph_spacing(
+            p,
+            space_before=self.config.PARAGRAPH.space_before_title,
+            space_after=self.config.PARAGRAPH.space_after_title,
+            line_spacing=self.config.PARAGRAPH.line_spacing
+        )
 
         # 检查是否是落款或日期
         if is_signature_line(line):

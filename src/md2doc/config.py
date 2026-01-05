@@ -24,10 +24,10 @@ class FontConfig:
 @dataclass
 class MarginConfig:
     """页边距配置（单位：cm）"""
-    top: float = 3.7
-    bottom: float = 3.5
-    left: float = 2.8
-    right: float = 2.6
+    top: float = 3.7      # 37mm - 上边距
+    bottom: float = 3.7   # 37mm - 下边距（与上边距一致）
+    left: float = 2.8     # 28mm - 左边距
+    right: float = 2.8    # 28mm - 右边距（与左边距一致）
     header: float = 1.5
     footer: float = 2.5
 
@@ -35,7 +35,7 @@ class MarginConfig:
 @dataclass
 class ParagraphConfig:
     """段落配置"""
-    line_spacing: Pt = Pt(28)  # 固定值28磅行距
+    line_spacing: Pt = Pt(30.5)  # 固定值30.5磅行距（符合每面22行标准）
     first_line_indent_chars: int = 2  # 首行缩进2字符
     space_before_title: Pt = Pt(0)  # 标题段前间距（不额外空行）
     space_after_title: Pt = Pt(0)  # 标题段后间距
@@ -44,14 +44,14 @@ class ParagraphConfig:
 class ConverterConfig:
     """转换器配置类"""
 
-    # 字体规范（根据GB/T 9704-2012）
+    # 字体规范（根据GB/T 9704-2012和CSS标准）
     FONTS = {
-        'title': FontConfig('方正小标宋简体', 22, True),  # 2号小标宋
-        'heading1': FontConfig('方正小标宋简体', 22, True),  # 2号小标宋
-        'heading2': FontConfig('黑体', 16, True),  # 3号黑体
-        'heading3': FontConfig('楷体', 16, True),  # 3号楷体
-        'body': FontConfig('仿宋_GB2312', 16),  # 3号仿宋_GB2312
-        'quote': FontConfig('仿宋_GB2312', 16, italic=True),  # 3号仿宋斜体
+        'title': FontConfig('方正小标宋简体', 22, True),  # 文档主标题：2号小标宋加粗
+        'heading1': FontConfig('黑体', 16, False),  # 一级标题（##）：3号黑体常规（黑体本身已醒目）
+        'heading2': FontConfig('楷体', 16, False),  # 二级标题（###）：3号楷体常规（楷体本身已醒目）
+        'heading3': FontConfig('仿宋_GB2312', 16, False),  # 三级标题（####）：3号仿宋常规
+        'body': FontConfig('仿宋_GB2312', 16),  # 正文：3号仿宋_GB2312
+        'quote': FontConfig('仿宋_GB2312', 16, italic=True),  # 引用：3号仿宋斜体
     }
 
     # 页边距配置
