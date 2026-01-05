@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+命令行工具 - 批量转换Markdown到Word
+"""
+
+import sys
+import io
+import argparse
+import logging
+from pathlib import Path
+from datetime import datetime
+
+# 添加src目录到路径
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from md2doc import MarkdownConverter, ConverterConfig
+
+
+def setup_logging(log_file=None, verbose=False):
+    """配置日志系统"""
+    log_format = '%(asctime)s - %(levelname)s - %(message)s'
+    date_format = '%Y-%m-%d %H:%M:%S'
+
+    level = logging.DEBUG if verbose else logging.INFO
+    handlers = [logging.StreamHandler(sys.stdout)]
+
+    if log_file:
+        handlers.append(logging.FileHandler(log_file, encoding='utf-8'))
+
+    logging.basicConfig(
+        level=level,
+        format=log_format,
+        datefmt=date_format,
+        handlers=handlers
+    )
+    return logging.getLogger(__name__)
+
+
+def convert_single_file(md_file: Path, output_dir: Path, converter, logger) -> bool:
+    """转换单个文件"""
+    try:
+        doc, title = converter.convert(md_file)
+        if doc is None:
+            return False
+
+        # 生成输出文件名
+        output_filename = f"{title}.docx"
+        output_path = output_dir / output_filename
+
+        # 保存文档
+        doc.save(output_path)
+        logger.info(f"✓ 成功: {output_filename}")
+        return True
+
+    except Exception as e:
+        logger.error(f"✗ 失败: {md_file.name} - {e}")
+        return False
+
+
+def main():
+    """主函数"""
+    # 修复Windows控制台编码问题
+    if sys.platform == 'win32':
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+    parser = argparse.ArgumentParser(
+        description='Markdown 转 Word 批量转换工具',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 转换input文件夹中的所有md文件到output文件夹
+  python -m md2doc.cli
+
+  # 指定输入输出目录
+  python -m md2doc.cli -i ./md_files -o ./word_files
+
+  # 转换单个文件
+  python -m md2doc.cli -f document.md
+
+  # 显示详细信息
+  python -m md2doc.cli -v
+        """
+    )
+
+    parser.add_argument('-i', '--input', type=str, default='input',
+                       help='输入文件夹路径 (默认: input)')
+    parser.add_argument('-o', '--output', type=str, default='output',
+                       help='输出文件夹路径 (默认: output)')
+    parser.add_argument('-f', '--file', type=str,
+                       help='转换单个文件')
+    parser.add_argument('-l', '--log', type=str,
+                       help='日志文件路径')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                       help='显示详细日志')
+
+    args = parser.parse_args()
+
+    # 设置日志
+    logger = setup_logging(args.log, args.verbose)
+
+    # 打印标题
+    print('=' * 60)
+    print('Markdown 转 Word 批量转换工具')
+    print('=' * 60)
+    print()
+
+    # 创建转换器
+    converter = MarkdownConverter()
+    start_time = datetime.now()
+
+    try:
+        # 转换单个文件
+        if args.file:
+            md_file = Path(args.file)
+            if not md_file.exists():
+                logger.error(f"文件不存在: {args.file}")
+                sys.exit(1)
+
+            output_dir = Path(args.output)
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            logger.info(f"输出目录: {output_dir.absolute()}")
+            success = convert_single_file(md_file, output_dir, converter, logger)
+
+            if success:
+                print()
+                print('转换完成！')
+            else:
+                sys.exit(1)
+
+        # 批量转换
+        else:
+            input_dir = Path(args.input)
+            output_dir = Path(args.output)
+
+            if not input_dir.exists():
+                logger.error(f"输入目录不存在: {input_dir}")
+                sys.exit(1)
+
+            # 创建输出目录
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            logger.info(f"输入目录: {input_dir.absolute()}")
+            logger.info(f"输出目录: {output_dir.absolute()}")
+
+            # 查找所有md文件
+            md_files = list(input_dir.glob('*.md')) + list(input_dir.glob('*.markdown'))
+
+            if not md_files:
+                logger.warning('未找到任何 Markdown 文件')
+                sys.exit(0)
+
+            logger.info(f"找到 {len(md_files)} 个文件")
+
+            # 转换文件
+            results = {
+                'success': 0,
+                'failed': 0,
+                'skipped': 0
+            }
+
+            for md_file in md_files:
+                if convert_single_file(md_file, output_dir, converter, logger):
+                    results['success'] += 1
+                else:
+                    results['failed'] += 1
+
+            # 打印结果
+            elapsed_time = (datetime.now() - start_time).total_seconds()
+            print()
+            print('=' * 60)
+            print('转换完成！')
+            print(f'  成功: {results["success"]}')
+            print(f'  跳过: {results["skipped"]}')
+            print(f'  失败: {results["failed"]}')
+            print(f'  耗时: {elapsed_time:.2f} 秒')
+            print(f'  输出: {output_dir.absolute()}')
+            print('=' * 60)
+
+    except KeyboardInterrupt:
+        logger.info('\n用户中断操作')
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f'发生错误: {e}')
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

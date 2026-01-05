@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(conda activate:*)",
+      "Bash(python:*)",
+      "Bash(set:*)",
+      "Bash(findstr:*)",
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(venv_demoScriptspython.exe:*)",
+      "Bash(\"venv_demo\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(''虚拟环境中的Python:'', sys.executable\\)\")",
+      "Bash(dir:*)",
+      "Bash(\"venv\\\\Scripts\\\\pip.exe\" install:*)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\":*)",
+      "Bash(cmd.exe /c 运行测试.bat)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" md2doc.py -v)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, ''src''\\); from md2doc.parser import parse_inline_formatting; text = ''根据学校及学院年度考核工作安排''; print\\(''输入:'', text\\); print\\(''输出:'', parse_inline_formatting\\(text\\)\\)\")",
+      "Bash(ls:*)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" test_color.py)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" check_background.py)",
+      "Bash(\"venv\\\\Scripts\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, ''src''\\); from md2doc.config import ConverterConfig; from docx.shared import Pt; config = ConverterConfig\\(\\); print\\(''行间距设置:'', config.PARAGRAPH.line_spacing\\); print\\(''行间距类型:'', type\\(config.PARAGRAPH.line_spacing\\)\\); print\\(''是否为Pt对象:'', isinstance\\(config.PARAGRAPH.line_spacing, Pt\\)\\); print\\(''Pt值:'', config.PARAGRAPH.line_spacing.pt if isinstance\\(config.PARAGRAPH.line_spacing, Pt\\) else ''N/A''\\)\")",
+      "Bash(wc:*)",
+      "Bash(del:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
